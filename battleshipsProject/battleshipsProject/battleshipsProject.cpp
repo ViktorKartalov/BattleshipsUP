@@ -83,12 +83,78 @@ char** placeShipAtCoordinates(char** grid, int x, int y, char orientation) {
     return grid;
 }
 
-bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char searched) {
-
+bool sequenceExistsAtCoords(char** matrix, int shipLength, int row, int col, char orientation, char searched) {
+    if (orientation != 'h' && orientation != 'v')
+    {
+        return false;
+    }
+    if (orientation == 'h')
+    {
+        for (size_t i = col; i < col + shipLength; i++)
+        {
+            if (matrix[row][i] != searched || matrix[row][i] != matrix[row][i + 1])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    for (size_t i = row; i < row + shipLength; i++)
+    {
+        if (matrix[i][col] != searched || matrix[i][col] != matrix[i + 1][col])
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
+bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char searched) {
+    bool isSequence = true;
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols - shipLength; j++)
+        {
+            isSequence = true;
+            for (size_t l = j; l <= j + shipLength - 1; i++)
+            {
+                if (matrix[i][j] != matrix[i][j + 1] || matrix[i][j] != searched)
+                {
+                    isSequence = false;
+                    break;
+                }
+            }
+            if (isSequence)
+            {
+                return true;
+            }
+        }
+    }
+    for (size_t i = 0; i < cols; i++)
+    {
+        for (size_t j = 0; j < rows - shipLength; j++)
+        {
+            isSequence = true;
+            for (size_t l = j; l <= j + shipLength - 1; i++)
+            {
+                if (matrix[j][i] != matrix[j + 1][i] || matrix[j][i] != searched)
+                {
+                    isSequence = false;
+                }
+            }
+            if (isSequence)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+
 char** placeShips(char** grid, int* ships, int rows, int cols) {
-    int copy[6], x, y;
+    int copy[6], row, col;
     char orientation;
     copyArray(ships, copy, 6);
     printMatrix(grid, rows, cols);
@@ -96,12 +162,12 @@ char** placeShips(char** grid, int* ships, int rows, int cols) {
     {
         while (copy[i] > 0)
         {
-            cout << "Enter coordinates to place a ship with a length of " << i << ", as well as an orientation (h/v): " << endl;
-            cin >> x >> y >> orientation;
-            while (placeShipAtCoordinates(grid, x, y, orientation))
+            cout << "Enter coordinates (row and col) to place a ship with a length of " << i << ", as well as an orientation (h/v): " << endl;
+            cin >> row >> col >> orientation;
+            while (!sequenceExistsAtCoords(grid, i, row, col, orientation, '0'))
             {
                 cout << "Invalid coordinates/orientation. Try again. (Make sure that the orientation is in lowercase): " << endl;
-                cin >> x >> y >> orientation;
+                cin >> row >> col >> orientation;
             }
             copy[i]--;
         }
