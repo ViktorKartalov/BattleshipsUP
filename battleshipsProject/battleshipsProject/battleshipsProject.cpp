@@ -2,9 +2,23 @@
 #include <string>
 #include <ctime>
 #include <cstdlib>
+#include <fstream>
 using namespace std;
 
 char** P1_GRID, **P2_GRID, **P1_GRID_GRAPHIC, **P2_GRID_GRAPHIC;
+
+struct gameData {
+    char** p1; 
+    char** p2;
+    char** p1Graphic;
+    char** p2Graphic;
+    int rows; 
+    int cols; 
+    int currentPlayer;
+    int gamemode;
+};
+
+gameData dataToSave;
 
 void printStartingScreen() {
    cout << "------------BATTLESHIPS-----------" << endl << endl
@@ -13,9 +27,11 @@ void printStartingScreen() {
         << "  _______/_____\\_______\\_____     " << endl
         << "  \\              < < <       |    " << endl
         << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl << endl
-        << "Welcome to Battleships! Select which gamemode you" << endl << "would like to play by typing out one of the following:" << endl << endl
+        << "Welcome to Battleships! Select which gamemode you" << endl << 
+       "would like to play by typing out one of the following:" << endl << endl
         << "- 1P" << endl
-        << "- 2P" << endl << endl;
+        << "- 2P" << endl 
+        << "- R (resume, only type if there's a saved game)" << endl << endl;
 }
 
 void clearInput() {
@@ -46,9 +62,20 @@ bool shipsDontFit(int* ships, int rows, int cols) {
 }
 
 void printMatrix(char** matrix, int rows, int cols) {
-
+    cout << "     ";
+    for (size_t i = 0; i < cols; i++)
+    {
+        cout << i << "    ";
+    }
+    cout << "\n";
+    cout << "     ";
+    for (size_t i = 0; i < cols; i++)
+    {
+        cout << "-    ";
+    }cout << "\n";
     for (size_t i = 0; i < rows; i++)
     {
+        cout << i << "|   ";
         for (size_t j = 0; j < cols; j++)
         {
             cout << matrix[i][j] << "    ";
@@ -162,7 +189,7 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int rows, int cols, i
         }
         return true;
     }
-    if (row + shipLength >= rows)
+    if (row + shipLength > rows)
     {
         return false;
     }
@@ -277,10 +304,64 @@ bool gameIsFinished(char** grid, char** gridGraphic, int rows, int cols) {
     return true;
 }
 
+void saveData(ofstream &stream) {
+    char** p1 = dataToSave.p1;
+    char** p2 = dataToSave.p2;
+    char** p1Graphic = dataToSave.p1Graphic;
+    char** p2Graphic = dataToSave.p2Graphic;
+    int rows = dataToSave.rows;
+    int cols = dataToSave.cols;
+    int currentPlayer = dataToSave.currentPlayer;
+    int gamemode = dataToSave.gamemode;
+    if (!stream.is_open())
+    {
+        return;
+    }
+    stream << "SAVED\n";
+    stream << rows << endl;
+    stream << cols << endl;
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            stream << p1[i][j] << endl;
+        }
+    }
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            stream << p2[i][j] << endl;
+        }
+    }
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            stream << p1Graphic[i][j] << endl;
+        }
+    }
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            stream << p2Graphic[i][j] << endl;
+        }
+    }
+    stream << currentPlayer << endl;
+    stream << gamemode << endl;
+    stream.close();
+}
 
-void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols) {
+void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols, int currentPlayer = 1) {
     clearConsole();
-    int currentPlayer = 1;
+    ofstream stream;
+    stream.open("gamedata.txt", std::ofstream::out | std::ofstream::trunc);
+    dataToSave.gamemode = 2;
+    dataToSave.p1 = p1;
+    dataToSave.p2 = p2;
+    dataToSave.rows = rows;
+    dataToSave.cols = cols;
     while (!gameIsFinished(p1, p1Graphic, rows, cols) && !gameIsFinished(p2, p2Graphic, rows, cols))
     {
         cout << "It's player " << currentPlayer << "'s turn!\n\n";
@@ -300,6 +381,10 @@ void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
             }
             clearConsole();
             p2Graphic[hitRow][hitCol] = p2[hitRow][hitCol];
+            dataToSave.p1Graphic = p1Graphic;
+            dataToSave.p2Graphic = p2Graphic;
+            dataToSave.currentPlayer = currentPlayer;
+            saveData(stream);
             if (p2[hitRow][hitCol] == '0')
             {
                 cout << "Player 1 didn't hit a ship.\n";
@@ -326,6 +411,10 @@ void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
             }
             clearConsole();
             p1Graphic[hitRow][hitCol] = p1[hitRow][hitCol];
+            dataToSave.p1Graphic = p1Graphic;
+            dataToSave.p2Graphic = p2Graphic;
+            dataToSave.currentPlayer = currentPlayer;
+            saveData(stream);
             if (p1[hitRow][hitCol] == '0')
             {
                 cout << "Player 2 didn't hit a ship.\n";
@@ -349,6 +438,8 @@ void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
         printMatrix(p1, rows, cols);
         cout << "Player 2 wins!";
     }
+    stream.close();
+;
 }
 
 void launchTwoPlayerMode() {
@@ -408,6 +499,18 @@ void launchTwoPlayerMode() {
     clearInput();
     clearConsole();
     start2PGame(P1_GRID, P2_GRID, P1_GRID_GRAPHIC, P2_GRID_GRAPHIC, rows, cols);
+    for (int i = 0; i < rows; ++i)
+    {
+        delete[] P1_GRID[i]; 
+        delete[] P2_GRID[i];
+        delete[] P1_GRID_GRAPHIC[i];
+        delete[] P2_GRID_GRAPHIC[i];
+    }
+    delete[] P1_GRID;
+    delete[] P2_GRID;
+    delete[] P1_GRID_GRAPHIC;
+    delete[] P2_GRID_GRAPHIC;
+
 }
 
 const char ORIENTATION_OPTIONS[] = {'h', 'v'};
@@ -442,12 +545,19 @@ char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
 }
 
 
-void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols) {
+void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols, int currentPlayer = 1) {
     clearConsole();
-    int currentPlayer = 1, hitRow, hitCol, cpuHitRow, cpuHitCol;
+    int hitRow, hitCol, cpuHitRow, cpuHitCol;
     int possibleCoords;
     bool cpuHitShip = false;
     string buffer;
+    ofstream stream;
+    stream.open("gamedata.txt", std::ofstream::out | std::ofstream::trunc);
+    dataToSave.gamemode = 1;
+    dataToSave.p1 = p1;
+    dataToSave.p2 = p2;
+    dataToSave.rows = rows;
+    dataToSave.cols = cols;
     while (!gameIsFinished(p1, p1Graphic, rows, cols) && !gameIsFinished(p2, p2Graphic, rows, cols))
     {
         //P1 turn
@@ -466,6 +576,10 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
             }
             clearConsole();
             p2Graphic[hitRow][hitCol] = p2[hitRow][hitCol];
+            dataToSave.p1Graphic = p1Graphic;
+            dataToSave.p2Graphic = p2Graphic;
+            dataToSave.currentPlayer = currentPlayer;
+            saveData(stream);
             if (p2[hitRow][hitCol] == '0')
             {
                 cout << "Player didn't hit a ship.\n";
@@ -535,6 +649,10 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
                 }
             }
             p1Graphic[hitRow][hitCol] = p1[hitRow][hitCol];
+            dataToSave.p1Graphic = p1Graphic;
+            dataToSave.p2Graphic = p2Graphic;
+            dataToSave.currentPlayer = currentPlayer;
+            saveData(stream);
             cout << "CPU hit at the coordinates " << hitRow << ", " << hitCol << "\n";
             printMatrix(p1Graphic, rows, cols);
             if (p1[hitRow][hitCol] == '0')
@@ -567,6 +685,7 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
         printMatrix(p1, rows, cols);
         cout << "CPU wins!";
     }
+    stream.close();
 }
 
 void launchOnePlayerMode() {
@@ -623,16 +742,94 @@ void launchOnePlayerMode() {
     //printMatrix(P2_GRID, rows, cols);
     clearConsole();
     start1PGame(P1_GRID, P2_GRID, P1_GRID_GRAPHIC, P2_GRID_GRAPHIC, rows, cols);
-
+    for (int i = 0; i < rows; ++i)
+    {
+        delete[] P1_GRID[i];
+        delete[] P2_GRID[i];
+        delete[] P1_GRID_GRAPHIC[i];
+        delete[] P2_GRID_GRAPHIC[i];
+    }
+    delete[] P1_GRID;
+    delete[] P2_GRID;
+    delete[] P1_GRID_GRAPHIC;
+    delete[] P2_GRID_GRAPHIC;
 }
 
 void resumeGame() {
-
+    ifstream stream("gamedata.txt");
+    if (stream.is_open())
+    {
+        string buffer;
+        stream >> buffer;
+        if (buffer != "SAVED")
+        {
+            cout << "There is no saved data.";
+            stream.close();
+            return;
+        }
+        int rows, cols;
+        stream >> rows;
+        stream >> cols;
+        char** p1 = new char*[rows];
+        for (size_t i = 0; i < rows; i++)
+        {
+            p1[i] = new char[cols];
+            for (size_t j = 0; j < cols; j++)
+            {
+                stream >> p1[i][j];
+            }
+        }
+        char** p2 = new char* [rows];
+        for (size_t i = 0; i < cols; i++)
+        {
+            p2[i] = new char[cols];
+            for (size_t j = 0; j < cols; j++)
+            {
+                stream >> p2[i][j];
+            }
+        }
+        char** p1Graphic = new char* [rows];
+        for (size_t i = 0; i < cols; i++)
+        {
+            p1Graphic[i] = new char[cols];
+            for (size_t j = 0; j < cols; j++)
+            {
+                stream >> p1Graphic[i][j];
+            }
+        }
+        char** p2Graphic = new char* [rows];
+        for (size_t i = 0; i < cols; i++)
+        {
+            p2Graphic[i] = new char[cols];
+            for (size_t j = 0; j < cols; j++)
+            {
+                stream >> p2Graphic[i][j];
+            }
+        }
+        int currentPlayer;
+        stream >> currentPlayer;
+        int gamemode;
+        stream >> gamemode;
+        if (gamemode == 1)
+        {
+            start1PGame(p1, p2, p1Graphic, p2Graphic, rows, cols, currentPlayer);
+        }
+        else if (gamemode == 2)
+        {
+            start2PGame(p1, p2, p1Graphic, p2Graphic, rows, cols, currentPlayer);
+        }
+        stream.close();
+    }
+    else
+    {
+        cout << "File reading error.";
+        return;
+    }
 }
+
 
 int main()
 {
-    cout << rand() % 10 << " " << rand() % 100;
     printStartingScreen();
     string mode;
     cin >> mode;
