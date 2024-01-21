@@ -840,6 +840,26 @@ void resumeGame() {
             start2PGame(p1, p2, p1Graphic, p2Graphic, rows, cols, currentPlayer);
         }
         stream.close();
+        for (int i = 0; i < cols; i++)
+        {
+            delete[] p1[i];
+        }
+        delete[] p1;
+        for (int i = 0; i < cols; i++)    
+        {
+            delete[] p2[i];
+        }
+        delete[] p2;
+        for (int i = 0; i < cols; i++)
+        {
+            delete[] p1Graphic[i];
+        }
+        delete[] p1Graphic;
+        for (int i = 0; i < cols; i++)
+        {
+            delete[] p2Graphic[i];
+        }
+        delete[] p2Graphic;
     }
     else
     {
