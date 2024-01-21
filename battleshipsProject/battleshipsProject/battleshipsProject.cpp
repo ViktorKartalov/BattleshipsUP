@@ -61,25 +61,55 @@ void initializeGame(int* ships, int& rows, int& cols) {
     cout << "Enter grid dimensions:";
     cin >> rows >> cols;
     clearInput();
+    while (rows < 5 || cols < 5 || rows > 15 || cols > 15)
+    {
+        cout << "Rows/cols must be between 5 and 15! Try again.\n";
+        cin >> rows >> cols;
+        clearInput();
+    }
     do
     {
         cout << "Enter count of carriers (5-long ships): " << endl;
         cin >> ships[5];
         clearInput();
+        while (ships[5] < 0 || ships[5] * 5 > rows * cols)
+        {
+            cout << "Invalid count! Try again." << endl;
+            cin >> ships[5];
+            clearInput();
+        }
 
         cout << "Enter count of destroyers (4-long ships): " << endl;
         cin >> ships[4];
         clearInput();
+        while (ships[4] < 0 || ships[4] * 4 > rows * cols)
+        {
+            cout << "Invalid count! Try again." << endl;
+            cin >> ships[4];
+            clearInput();
+        }
 
         cout << "Enter count of submarines (3-long ships): " << endl;
         cin >> ships[3];
         clearInput();
+        while (ships[3] < 0 || ships[3] * 3 > rows * cols)
+        {
+            cout << "Invalid count! Try again." << endl;
+            cin >> ships[3];
+            clearInput();
+        }
 
         cout << "Enter count of boats (2-long ships): " << endl;
         cin >> ships[2];
         clearInput();
+        while (ships[2] < 0 || ships[2] * 2 > rows * cols)
+        {
+            cout << "Invalid count! Try again." << endl;
+            cin >> ships[2];
+            clearInput();
+        }
 
-    } while (shipsDontFit(ships, rows, cols));
+    } while (shipsDontFit(ships, rows, cols) || (ships[2] == 0 && ships[3] == 0 && ships[4] == 0 && ships[5] == 0));
     clearConsole();
 }
 
@@ -108,13 +138,21 @@ char** placeShipAtCoordinates(char** grid, int row, int col, char orientation, i
     return grid;
 }
 
-bool sequenceExistsAtCoords(char** matrix, int shipLength, int row, int col, char orientation, char searched) {
+bool sequenceExistsAtCoords(char** matrix, int shipLength, int rows, int cols, int row, int col, char orientation, char searched) {
     if (orientation != 'h' && orientation != 'v')
+    {
+        return false;
+    }
+    if (row < 0 || col < 0)
     {
         return false;
     }
     if (orientation == 'h')
     {
+        if (col + shipLength >= cols)
+        {
+            return false;
+        }
         for (size_t i = col; i < col + shipLength - 1; i++)
         {
             if (matrix[row][i] != searched || matrix[row][i] != matrix[row][i + 1])
@@ -124,7 +162,10 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int row, int col, cha
         }
         return true;
     }
-
+    if (row + shipLength >= rows)
+    {
+        return false;
+    }
     for (size_t i = row; i < row + shipLength - 1; i++)
     {
         if (matrix[i][col] != searched || matrix[i][col] != matrix[i + 1][col])
@@ -208,7 +249,7 @@ char** placeShips(char** grid, int* ships, int rows, int cols) {
             cout << "Enter coordinates (row and col) to place a ship with a length of " << i << ", as well as an orientation (h/v): " << endl;
             cin >> row >> col >> orientation;
             clearInput();
-            while (!sequenceExistsAtCoords(grid, i, row, col, orientation, '0'))
+            while (!sequenceExistsAtCoords(grid, i, rows, cols, row, col, orientation, '0'))
             {
                 cout << "Invalid coordinates/orientation. Try again. (Make sure that the orientation is in lowercase): " << endl;
                 cin >> row >> col >> orientation;
@@ -388,7 +429,7 @@ char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
                 grid = clearMatrix(grid, rows, cols);
                 continue;
             }
-            while (!sequenceExistsAtCoords(grid, i, chosenRow, chosenCol, orientation, '0'))
+            while (!sequenceExistsAtCoords(grid, i, rows, cols, chosenRow, chosenCol, orientation, '0'))
             {                
                 srand(time(0));
                 chosenRow = rand() % rows, chosenCol = rand() % cols, orientation = ORIENTATION_OPTIONS[rand() % 1];
@@ -585,6 +626,10 @@ void launchOnePlayerMode() {
 
 }
 
+void resumeGame() {
+
+}
+
 int main()
 {
     cout << rand() % 10 << " " << rand() % 100;
@@ -592,7 +637,7 @@ int main()
     string mode;
     cin >> mode;
     clearInput();
-    while (mode != "1p" && mode != "2p" && mode != "1P" && mode != "2P")
+    while (mode != "1p" && mode != "2p" && mode != "1P" && mode != "2P" && mode != "r" && mode != "R")
     {
         cout << "Unsupported gamemode. Try again:" << endl;
         cin >> mode;
@@ -605,5 +650,9 @@ int main()
     else if (mode == "1p" || mode == "1P")
     {
         launchOnePlayerMode();
+    }
+    if (mode == "r" || mode == "R")
+    {
+        resumeGame();
     }
 }
