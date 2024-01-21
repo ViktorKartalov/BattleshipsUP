@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstring>
+#include <string>
 using namespace std;
 
 char** P1_GRID, **P2_GRID, **P1_GRID_GRAPHIC, **P2_GRID_GRAPHIC;
@@ -53,6 +53,7 @@ void printMatrix(char** matrix, int rows, int cols) {
 void initializeGame(int* ships, int& rows, int& cols) {
     cout << "Enter grid dimensions:";
     cin >> rows >> cols;
+    cin.ignore();
     P1_GRID = new char* [rows];
     do
     {
@@ -208,8 +209,88 @@ char** placeShips(char** grid, int* ships, int rows, int cols) {
     return grid;
 }
 
-void start2PGame() {
+bool gameIsFinished(char** grid, char** gridGraphic, int rows, int cols) {
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols; j++)
+        {
+            if (grid[i][j] != gridGraphic[i][j] && grid[i][j] != '0')
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
+
+void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols) {
+    clearConsole();
+    int currentPlayer = 1;
+    while (!gameIsFinished(p1, p1Graphic, rows, cols) && !gameIsFinished(p2, p2Graphic, rows, cols))
+    {
+        cout << "It's player " << currentPlayer << "'s turn!\n\n";
+        //P1 turn
+        if (currentPlayer == 1)
+        {
+            printMatrix(p2Graphic, rows, cols);
+            cout << "Enter the coordinates of the cell you'd like to hit: ";
+            int hitRow, hitCol;
+            cin >> hitRow >> hitCol;
+            while (hitRow < 0 || hitCol < 0 || hitRow >= rows || hitCol >= cols || p2Graphic[hitRow][hitCol] != 'X')
+            {
+                cout << "Invalid coordinates, try again: ";
+                cin >> hitRow >> hitCol;
+            }
+            clearConsole();
+            p2Graphic[hitRow][hitCol] = p2[hitRow][hitCol];
+            if (p2[hitRow][hitCol] == '0')
+            {
+                cout << "Player 1 didn't hit a ship.\n";
+                currentPlayer = 2;
+            }
+            else
+            {
+                cout << "Player 1 hit a ship!\n";
+            }
+        }
+        //P2 turn
+        else
+        {
+            printMatrix(p1Graphic, rows, cols);
+            cout << "Enter the coordinates of the cell you'd like to hit: ";
+            int hitRow, hitCol;
+            cin >> hitRow >> hitCol;
+            while (hitRow < 0 || hitCol < 0 || hitRow >= rows || hitCol >= cols || p1Graphic[hitRow][hitCol] != 'X')
+            {
+                cout << "Invalid coordinates, try again: ";
+                cin >> hitRow >> hitCol;
+            }
+            clearConsole();
+            p1Graphic[hitRow][hitCol] = p1[hitRow][hitCol];
+            if (p1[hitRow][hitCol] == '0')
+            {
+                cout << "Player 2 didn't hit a ship.\n";
+                currentPlayer = 1;
+            }
+            else
+            {
+                cout << "Player 2 hit a ship!\n";
+            }
+        }
+    }
+    if (gameIsFinished(p2, p2Graphic, rows, cols))
+    {
+        cout << "All of player 2's ships have been found!\n";
+        printMatrix(p2, rows, cols);
+        cout << "Player 1 wins!";
+    }
+    if (gameIsFinished(p1, p1Graphic, rows, cols))
+    {
+        cout << "All of player 1's ships have been found!\n";
+        printMatrix(p1, rows, cols);
+        cout << "Player 2 wins!";
+    }
 }
 
 void launchTwoPlayerMode() {
@@ -241,7 +322,7 @@ void launchTwoPlayerMode() {
         P1_GRID_GRAPHIC[i] = new char[cols];
         for (size_t j = 0; j < cols; j++)
         {
-            P1_GRID_GRAPHIC[i][j] = '0';
+            P1_GRID_GRAPHIC[i][j] = 'X';
         }
     }
     P2_GRID_GRAPHIC = new char* [rows];
@@ -250,22 +331,23 @@ void launchTwoPlayerMode() {
         P2_GRID_GRAPHIC[i] = new char[cols];
         for (size_t j = 0; j < cols; j++)
         {
-            P2_GRID_GRAPHIC[i][j] = '0';
+            P2_GRID_GRAPHIC[i][j] = 'X';
         }
     }
     cout << "Player 1, enter your ships!\n";
-    placeShips(P1_GRID, ships, rows, cols);
+    P1_GRID = placeShips(P1_GRID, ships, rows, cols);
     printMatrix(P1_GRID, rows, cols);
-    cout << "This is the final placement of your ships. Enter any character to continue." << endl;
-    char random[1];
-    cin >> random;
+    cout << "This is the final placement of your ships. Enter any character to confirm." << endl;
+    string buffer;
+    cin >> buffer;
     clearConsole();
     cout << "Player 2, enter your ships!\n";
-    placeShips(P2_GRID, ships, rows, cols);
+    P2_GRID = placeShips(P2_GRID, ships, rows, cols);
+    printMatrix(P2_GRID, rows, cols);
     cout << "This is the final placement of your ships. Enter any character to continue." << endl;
-    cin >> random;
+    cin >> buffer;
     clearConsole();
-
+    start2PGame(P1_GRID, P2_GRID, P1_GRID_GRAPHIC, P2_GRID_GRAPHIC, rows, cols);
 }
 
 void launchOnePlayerMode() {
