@@ -186,7 +186,7 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int rows, int cols, i
     }
     if (orientation == 'h')
     {
-        if (col + shipLength >= cols)
+        if (col + shipLength > cols)
         {
             return false;
         }
