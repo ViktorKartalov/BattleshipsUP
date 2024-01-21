@@ -79,7 +79,21 @@ void copyArray(int* copyFrom, int* copyTo, int length) {
     }
 }
 
-char** placeShipAtCoordinates(char** grid, int x, int y, char orientation) {
+char** placeShipAtCoordinates(char** grid, int row, int col, char orientation, int ship) {
+    if (orientation == 'h')
+    {
+        for (size_t i = col; i < col + ship; i++)
+        {
+            grid[row][i] = ship + '0';
+        }
+    }
+    if (orientation == 'v')
+    {
+        for (size_t i = row; i < row + ship; i++)
+        {
+            grid[i][col] = ship + '0';
+        }
+    }
     return grid;
 }
 
@@ -90,7 +104,7 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int row, int col, cha
     }
     if (orientation == 'h')
     {
-        for (size_t i = col; i < col + shipLength; i++)
+        for (size_t i = col; i < col + shipLength - 1; i++)
         {
             if (matrix[row][i] != searched || matrix[row][i] != matrix[row][i + 1])
             {
@@ -99,7 +113,7 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int row, int col, cha
         }
         return true;
     }
-    for (size_t i = row; i < row + shipLength; i++)
+    for (size_t i = row; i < row + shipLength - 1; i++)
     {
         if (matrix[i][col] != searched || matrix[i][col] != matrix[i + 1][col])
         {
@@ -113,10 +127,10 @@ bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char sear
     bool isSequence = true;
     for (size_t i = 0; i < rows; i++)
     {
-        for (size_t j = 0; j < cols - shipLength; j++)
+        for (size_t j = 0; j <= cols - shipLength; j++)
         {
             isSequence = true;
-            for (size_t l = j; l <= j + shipLength - 1; i++)
+            for (size_t l = j; l <= j + shipLength - 1; l++)
             {
                 if (matrix[i][j] != matrix[i][j + 1] || matrix[i][j] != searched)
                 {
@@ -132,10 +146,10 @@ bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char sear
     }
     for (size_t i = 0; i < cols; i++)
     {
-        for (size_t j = 0; j < rows - shipLength; j++)
+        for (size_t j = 0; j <= rows - shipLength; j++)
         {
             isSequence = true;
-            for (size_t l = j; l <= j + shipLength - 1; i++)
+            for (size_t l = j; l <= j + shipLength - 1; l++)
             {
                 if (matrix[j][i] != matrix[j + 1][i] || matrix[j][i] != searched)
                 {
@@ -151,17 +165,34 @@ bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char sear
     return false;
 }
 
-
+char** clearMatrix(char** matrix, int rows, int cols) {
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols; j++)
+        {
+            matrix[i][j] = '0';
+        }
+    }
+    return matrix;
+}
 
 char** placeShips(char** grid, int* ships, int rows, int cols) {
     int copy[6], row, col;
     char orientation;
     copyArray(ships, copy, 6);
-    printMatrix(grid, rows, cols);
     for (size_t i = 2; i <= 5; i++)
     {
         while (copy[i] > 0)
         {
+            if (!sequenceExists(grid, i, rows, cols, '0'))
+            {
+                i = 2;
+                copyArray(ships, copy, 6);
+                grid = clearMatrix(grid, rows, cols);
+                cout << "Not all of the ships can fit. Try again! >:(\n\n";
+                continue;
+            }
+            printMatrix(grid, rows, cols);
             cout << "Enter coordinates (row and col) to place a ship with a length of " << i << ", as well as an orientation (h/v): " << endl;
             cin >> row >> col >> orientation;
             while (!sequenceExistsAtCoords(grid, i, row, col, orientation, '0'))
@@ -169,10 +200,16 @@ char** placeShips(char** grid, int* ships, int rows, int cols) {
                 cout << "Invalid coordinates/orientation. Try again. (Make sure that the orientation is in lowercase): " << endl;
                 cin >> row >> col >> orientation;
             }
+            P1_GRID = placeShipAtCoordinates(grid, row, col, orientation, i);
             copy[i]--;
+            clearConsole();
         }
     }
     return grid;
+}
+
+void start2PGame() {
+
 }
 
 void launchTwoPlayerMode() {
@@ -180,6 +217,7 @@ void launchTwoPlayerMode() {
     int rows, cols;
     int ships[6];
     initializeGame(ships, rows, cols);
+    P1_GRID = new char* [rows];
     for (int i = 0; i < rows; ++i)
     {
         P1_GRID[i] = new char[cols + 1];
@@ -215,7 +253,19 @@ void launchTwoPlayerMode() {
             P2_GRID_GRAPHIC[i][j] = '0';
         }
     }
+    cout << "Player 1, enter your ships!\n";
     placeShips(P1_GRID, ships, rows, cols);
+    printMatrix(P1_GRID, rows, cols);
+    cout << "This is the final placement of your ships. Enter any character to continue." << endl;
+    char random[1];
+    cin >> random;
+    clearConsole();
+    cout << "Player 2, enter your ships!\n";
+    placeShips(P2_GRID, ships, rows, cols);
+    cout << "This is the final placement of your ships. Enter any character to continue." << endl;
+    cin >> random;
+    clearConsole();
+
 }
 
 void launchOnePlayerMode() {
