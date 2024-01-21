@@ -7,6 +7,7 @@ using namespace std;
 
 char** P1_GRID, **P2_GRID, **P1_GRID_GRAPHIC, **P2_GRID_GRAPHIC;
 
+// A structure that keeps data. Necessary for saving data.
 struct gameData {
     char** p1; 
     char** p2;
@@ -20,6 +21,7 @@ struct gameData {
 
 gameData dataToSave;
 
+// Prints the main menu screen.
 void printStartingScreen() {
    cout << "------------BATTLESHIPS-----------" << endl << endl
         << "                __/___            " << endl
@@ -34,11 +36,13 @@ void printStartingScreen() {
         << "- R (resume, only type if there's a saved game)" << endl << endl;
 }
 
+// Clears the input buffer.
 void clearInput() {
     cin.clear();
     cin.ignore(cin.rdbuf()->in_avail());
 }
 
+// Clears out the console.
 void clearConsole() {
     // :D
     for (size_t i = 0; i < 40; i++)
@@ -47,6 +51,7 @@ void clearConsole() {
     }
 }
 
+// Checks if it's possible for a number of ships to fit into a matrix.
 bool shipsDontFit(int* ships, int rows, int cols) {
     int maxDimension = max(rows, cols);
     for (unsigned i = 2, spacesTakenUp = 0; i <= 5; i++)
@@ -61,6 +66,7 @@ bool shipsDontFit(int* ships, int rows, int cols) {
     return false;
 }
 
+// Prints out a matrix with indicators for row/column.
 void printMatrix(char** matrix, int rows, int cols) {
     cout << "     ";
     for (size_t i = 0; i < cols; i++)
@@ -84,6 +90,7 @@ void printMatrix(char** matrix, int rows, int cols) {
     }
 }
 
+// Sets the dimensions of the grid and the amounts of each ship.
 void initializeGame(int* ships, int& rows, int& cols) {
     cout << "Enter grid dimensions:";
     cin >> rows >> cols;
@@ -140,6 +147,7 @@ void initializeGame(int* ships, int& rows, int& cols) {
     clearConsole();
 }
 
+// Copies an array into another array.
 void copyArray(int* copyFrom, int* copyTo, int length) {
     for (size_t i = 0; i < length; i++)
     {
@@ -147,6 +155,7 @@ void copyArray(int* copyFrom, int* copyTo, int length) {
     }
 }
 
+// Places a ship at the specified coordinates with the specified orientation.
 char** placeShipAtCoordinates(char** grid, int row, int col, char orientation, int ship) {
     if (orientation == 'h')
     {
@@ -165,6 +174,7 @@ char** placeShipAtCoordinates(char** grid, int row, int col, char orientation, i
     return grid;
 }
 
+// Checks if a free space for a ship exists at given coordinates.
 bool sequenceExistsAtCoords(char** matrix, int shipLength, int rows, int cols, int row, int col, char orientation, char searched) {
     if (orientation != 'h' && orientation != 'v')
     {
@@ -203,6 +213,7 @@ bool sequenceExistsAtCoords(char** matrix, int shipLength, int rows, int cols, i
     return true;
 }
 
+// Checks if there's a free space in the matrix that could fit a ship of the given length.
 bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char searched) {
     bool isSequence = true;
     for (size_t i = 0; i < rows; i++)
@@ -245,6 +256,7 @@ bool sequenceExists(char** matrix, int shipLength, int rows, int cols, char sear
     return false;
 }
 
+// Sets all the elements in a matrix to 0.
 char** clearMatrix(char** matrix, int rows, int cols) {
     for (size_t i = 0; i < rows; i++)
     {
@@ -256,6 +268,7 @@ char** clearMatrix(char** matrix, int rows, int cols) {
     return matrix;
 }
 
+// Starts the part of the game in which ships get placed.
 char** placeShips(char** grid, int* ships, int rows, int cols) {
     int copy[6], row, col;
     char orientation;
@@ -290,6 +303,7 @@ char** placeShips(char** grid, int* ships, int rows, int cols) {
     return grid;
 }
 
+// Checks if a player has found all the ships in their opponent's grid.
 bool gameIsFinished(char** grid, char** gridGraphic, int rows, int cols) {
     for (size_t i = 0; i < rows; i++)
     {
@@ -304,6 +318,7 @@ bool gameIsFinished(char** grid, char** gridGraphic, int rows, int cols) {
     return true;
 }
 
+// Saves the game data into a text file.
 void saveData(ofstream &stream) {
     char** p1 = dataToSave.p1;
     char** p2 = dataToSave.p2;
@@ -353,6 +368,7 @@ void saveData(ofstream &stream) {
     stream.close();
 }
 
+// Starts the part of the 2 player game where players choose coordinates to strike at.
 void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols, int currentPlayer = 1) {
     clearConsole();
     ofstream stream;
@@ -442,6 +458,7 @@ void start2PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
 ;
 }
 
+// This function starts the two player mode of Battleships.
 void launchTwoPlayerMode() {
     clearConsole();
     int rows, cols;
@@ -515,6 +532,7 @@ void launchTwoPlayerMode() {
 
 const char ORIENTATION_OPTIONS[] = {'h', 'v'};
 
+// Generates the CPU's grid, placing ships at random spots.
 char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
     srand(time(0));
     int chosenRow = rand() % rows, chosenCol = rand() % cols;
@@ -544,7 +562,8 @@ char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
     return grid;
 }
 
-
+// Starts the part of the 1 player game where a player inputs coordinates to strike at, while a computer opponent
+// generates them randomly. 
 void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols, int currentPlayer = 1) {
     clearConsole();
     int hitRow, hitCol, cpuHitRow, cpuHitCol;
@@ -631,7 +650,7 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
                         }
                     }
                     count++;
-                    if (count == 20)
+                    if (count == 50)
                     {
                         cpuHitShip = false;
                         break;
@@ -688,6 +707,7 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
     stream.close();
 }
 
+// This function starts the one player mode of Battleships.
 void launchOnePlayerMode() {
     clearConsole();
     int rows, cols;
@@ -755,6 +775,7 @@ void launchOnePlayerMode() {
     delete[] P2_GRID_GRAPHIC;
 }
 
+// Resumes a game that has been saved.
 void resumeGame() {
     ifstream stream("gamedata.txt");
     if (stream.is_open())
