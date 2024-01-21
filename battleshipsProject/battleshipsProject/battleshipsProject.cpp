@@ -375,7 +375,7 @@ char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
     srand(time(0));
     int chosenRow = rand() % rows, chosenCol = rand() % cols;
     int copy[6];
-    char orientation = ORIENTATION_OPTIONS[rand() % 1];
+    char orientation = ORIENTATION_OPTIONS[rand() % 2];
     copyArray(ships, copy, 6);
     for (size_t i = 2; i <= 5; i++)
     {
@@ -389,21 +389,23 @@ char** generateCPUGrid(char** grid, int* ships, int rows, int cols) {
                 continue;
             }
             while (!sequenceExistsAtCoords(grid, i, chosenRow, chosenCol, orientation, '0'))
-            {
-                //cout << "Invalid coordinates/orientation. Try again. (Make sure that the orientation is in lowercase): " << endl;
+            {                
                 srand(time(0));
                 chosenRow = rand() % rows, chosenCol = rand() % cols, orientation = ORIENTATION_OPTIONS[rand() % 1];
             }
-            P1_GRID = placeShipAtCoordinates(grid, chosenRow, chosenCol, orientation, i);
+            grid = placeShipAtCoordinates(grid, chosenRow, chosenCol, orientation, i);
             copy[i]--;
         }
     }
     return grid;
 }
 
+
 void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int rows, int cols) {
     clearConsole();
-    int currentPlayer = 1, hitRow, hitCol;
+    int currentPlayer = 1, hitRow, hitCol, cpuHitRow, cpuHitCol;
+    int possibleCoords;
+    bool cpuHitShip = false;
     string buffer;
     while (!gameIsFinished(p1, p1Graphic, rows, cols) && !gameIsFinished(p2, p2Graphic, rows, cols))
     {
@@ -436,42 +438,93 @@ void start1PGame(char** p1, char** p2, char** p1Graphic, char** p2Graphic, int r
         //CPU turn
         else
         {
-            cout << "It's the CPU's turn! (Press enter to continue)\n\n";
-            getline(cin, buffer);
-            printMatrix(p1Graphic, rows, cols);
-            srand(time(0));
-            hitRow = rand() % rows, hitCol = rand() % cols;
-            while (hitRow < 0 || hitCol < 0 || hitRow >= rows || hitCol >= cols || p1Graphic[hitRow][hitCol] != 'X')
+            cout << "It's the CPU's turn! (Press enter to continue)\n";
+            getline(cin, buffer);         
+            if(cpuHitShip)
+            {
+                srand(time(0));
+                bool chooseRow = rand() % 2;
+                srand(time(0));
+                bool usePlus = rand() % 2;
+                int count = 0;
+                while (hitRow < 0 || hitCol < 0 || hitRow >= rows || hitCol >= cols || p1Graphic[hitRow][hitCol] != 'X')
+                {
+                    if (chooseRow)
+                    {
+                        if (usePlus)
+                        {
+                            hitRow = cpuHitRow;
+                            hitCol = cpuHitCol + 1;
+                        }
+                        else
+                        {
+                            hitRow = cpuHitRow;
+                            hitCol = cpuHitCol - 1;
+                        }
+                    }
+                    else
+                    {
+                        if (usePlus)
+                        {
+                            hitRow = cpuHitRow + 1;
+                            hitCol = cpuHitCol;
+                        }
+                        else
+                        {
+                            hitRow = cpuHitRow + 1;
+                            hitCol = cpuHitCol;
+                        }
+                    }
+                    count++;
+                    if (count == 20)
+                    {
+                        cpuHitShip = false;
+                        break;
+                    }
+                }            
+            }
+            if (!cpuHitShip)
             {
                 srand(time(0));
                 hitRow = rand() % rows, hitCol = rand() % cols;
+                while (hitRow < 0 || hitCol < 0 || hitRow >= rows || hitCol >= cols || p1Graphic[hitRow][hitCol] != 'X')
+                {
+                    srand(time(0));
+                    hitRow = rand() % rows, hitCol = rand() % cols;
+                }
             }
             p1Graphic[hitRow][hitCol] = p1[hitRow][hitCol];
-            cout << "CPU hit at the coordinates" << hitRow << ", " << hitCol << "\n";
+            cout << "CPU hit at the coordinates " << hitRow << ", " << hitCol << "\n";
+            printMatrix(p1Graphic, rows, cols);
             if (p1[hitRow][hitCol] == '0')
             {
                 cout << "CPU didn't hit a ship. (Press enter to continue)\n";
                 currentPlayer = 1;
                 getline(cin, buffer);
+                cpuHitShip = false;
             }
             else
             {
                 cout << "CPU hit a ship! (Press enter to continue)\n";
                 getline(cin, buffer);
+                cpuHitRow = hitRow;
+                cpuHitCol = hitCol;
+                cpuHitShip = true;
             }
+            clearConsole();
         }
     }
     if (gameIsFinished(p2, p2Graphic, rows, cols))
     {
-        cout << "All of player 2's ships have been found!\n";
+        cout << "All of CPU's ships have been found!\n";
         printMatrix(p2, rows, cols);
-        cout << "Player 1 wins!";
+        cout << "Player wins!";
     }
     if (gameIsFinished(p1, p1Graphic, rows, cols))
     {
-        cout << "All of player 1's ships have been found!\n";
+        cout << "All of player's ships have been found!\n";
         printMatrix(p1, rows, cols);
-        cout << "Player 2 wins!";
+        cout << "CPU wins!";
     }
 }
 
@@ -526,6 +579,7 @@ void launchOnePlayerMode() {
     clearConsole();
     cout << "Generating the CPU's grid, please wait...";
     P2_GRID = generateCPUGrid(P2_GRID, ships, rows, cols);
+    //printMatrix(P2_GRID, rows, cols);
     clearConsole();
     start1PGame(P1_GRID, P2_GRID, P1_GRID_GRAPHIC, P2_GRID_GRAPHIC, rows, cols);
 
